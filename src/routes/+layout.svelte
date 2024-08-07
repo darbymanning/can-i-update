@@ -18,6 +18,12 @@
 
     return auth.data.subscription.unsubscribe
   })
+
+  function get_initial(metadata: NonNullable<typeof data.session>["user"]["user_metadata"]) {
+    const name = metadata.full_name || metadata.preferred_username || metadata.username
+
+    return name.slice(0, 1).toUpperCase()
+  }
 </script>
 
 {#snippet user_menu()}
@@ -29,7 +35,7 @@
         <Button variant="ghost" builders={[builder]} class="relative size-8 rounded-full">
           <Avatar.Root class="size-8">
             <Avatar.Image src={metadata.avatar_url} alt={metadata.preferred_username} />
-            <Avatar.Fallback>{metadata.full_name.slice(0, 1)}</Avatar.Fallback>
+            <Avatar.Fallback>{get_initial(metadata)}</Avatar.Fallback>
           </Avatar.Root>
         </Button>
       </DropdownMenu.Trigger>

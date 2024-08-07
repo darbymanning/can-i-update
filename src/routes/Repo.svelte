@@ -2,11 +2,22 @@
   import * as Accordion from "$lib/components/ui/accordion/index.js"
   import * as Card from "$lib/components/ui/card/index.js"
   import * as Tabs from "$lib/components/ui/tabs/index.js"
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js"
   import { Badge } from "$lib/components/ui/badge/index.js"
   import type { Repository } from "$lib/types"
   import SvelteMarkdown from "svelte-markdown"
+  import Ellipsis from "lucide-svelte/icons/ellipsis-vertical"
+  import RepoForm from "$lib/components/RepoForm.svelte"
+  import { enhance } from "$app/forms"
+  import { invalidateAll } from "$app/navigation"
+  import { toast } from "svelte-sonner"
 
-  let { releases, details, latest_release }: Repository = $props()
+  interface Props {
+    repo: Repository
+    editable?: boolean
+  }
+
+  let { repo, editable }: Props = $props()
 
   function format_date(date_str: string) {
     const d = new Date(date_str)
@@ -44,23 +55,60 @@
       return `${seconds} seconds ago`
     }
   }
+
+  let edit_open = $state(false)
 </script>
 
+<RepoForm {repo} bind:open={edit_open} />
 <Card.Root>
   <Card.Header>
-    <Card.Title>
-      <a href={details.html_url} target="_blank" rel="noopener noreferrer">
-        {details.full_name}
+    <Card.Title class="flex justify-between">
+      <a href={repo.details.html_url} target="_blank" rel="noopener noreferrer">
+        {repo.details.full_name}
       </a>
+      {#if editable}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Ellipsis class="size-4" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Group>
+              <DropdownMenu.Label>Manage</DropdownMenu.Label>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item onclick={() => (edit_open = true)}>Edit</DropdownMenu.Item>
+              <DropdownMenu.Item>
+                <form
+                  method="POST"
+                  action="/?/delete"
+                  use:enhance={() => {
+                    return async function ({ result }) {
+                      if (result.type === "success") {
+                        invalidateAll()
+
+                        toast.success("Repository removed", {
+                          description: "The repository has been removed successfully.",
+                        })
+                      }
+                    }
+                  }}
+                >
+                  <input type="hidden" name="id" value={repo.supa.id} />
+                  <button>Remove</button>
+                </form>
+              </DropdownMenu.Item>
+            </DropdownMenu.Group>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      {/if}
     </Card.Title>
     <Card.Description>
-      {#if latest_release?.published_at}
-        <a href={latest_release.html_url} target="_blank" rel="noopener noreferrer">
-          {latest_release.name},
-          <time datetime={latest_release.published_at}>
-            {time_ago(latest_release.published_at)}
+      {#if repo.latest_release?.published_at}
+        <a href={repo.latest_release.html_url} target="_blank" rel="noopener noreferrer">
+          {repo.latest_release.name},
+          <time datetime={repo.latest_release.published_at}>
+            {time_ago(repo.latest_release.published_at)}
           </time>
-          {#if latest_release.prerelease}
+          {#if repo.latest_release.prerelease}
             <Badge variant="outline">Pre-release</Badge>
           {/if}
         </a>
@@ -68,7 +116,7 @@
     </Card.Description>
   </Card.Header>
   <Card.Content>
-    {#if latest_release}
+    {#if repo.latest_release}
       <Tabs.Root value="latest">
         <Tabs.List class="mb-2">
           <Tabs.Trigger value="latest">Latest Release</Tabs.Trigger>
@@ -77,12 +125,12 @@
         <Tabs.Content value="latest" class="max-h-56 overflow-auto">
           <div class="prose dark:prose-invert">
             <h2 class="text-xs font-bold uppercase tracking-wider text-foreground">Release notes</h2>
-            <SvelteMarkdown source={latest_release?.body} />
+            <SvelteMarkdown source={repo.latest_release?.body} />
           </div>
         </Tabs.Content>
         <Tabs.Content value="more" class="max-h-56 overflow-auto">
           <Accordion.Root>
-            {#each releases as release}
+            {#each repo.releases as release}
               <Accordion.Item value={release.node_id}>
                 <Accordion.Trigger>{release.name}</Accordion.Trigger>
                 <Accordion.Content>

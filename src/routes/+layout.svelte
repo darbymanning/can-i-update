@@ -5,6 +5,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js"
   import * as Avatar from "$lib/components/ui/avatar/index.js"
   import { Button } from "$lib/components/ui/button/index.js"
+  import { Toaster } from "$lib/components/ui/sonner"
 
   let { children, data } = $props()
 
@@ -49,6 +50,8 @@
     </form>
   {/if}
 {/snippet}
+
+<Toaster />
 
 <div class="container my-10 grid gap-10">
   <header class="grid grid-cols-[1fr_auto] gap-10">

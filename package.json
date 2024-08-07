@@ -44,5 +44,9 @@
     "typescript-eslint": "8.0.1",
     "vite": "5.3.5"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "mode-watcher": "^0.4.1",
+    "svelte-sonner": "^0.3.27"
+  }
 }

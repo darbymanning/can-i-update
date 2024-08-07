@@ -92,4 +92,4 @@ const octokit: Handle = async ({ event, resolve }) => {
   return resolve(event)
 }
 
-export const handle: Handle = sequence(supabase, octokit, guard)
+export const handle: Handle = sequence(supabase, guard, octokit)
